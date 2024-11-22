@@ -10,9 +10,12 @@ const FormPreview: React.FC<FormPreviewProps> = ({ schema }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
   const onSubmit: SubmitHandler<any> = (data) => {
     setIsSubmitting(true);
+    setFormData(data);
     console.log('Form Data:', data);
 
     setTimeout(() => {
@@ -20,6 +23,30 @@ const FormPreview: React.FC<FormPreviewProps> = ({ schema }) => {
       setSuccessMessage('Form submitted successfully!');
       reset();
     }, 2000);
+  };
+
+  const downloadJSON = () => {
+    const jsonString = JSON.stringify(formData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'form-submission.json';
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const copyJSON = async () => {
+    const jsonString = JSON.stringify(formData, null, 2);
+    try {
+      await navigator.clipboard.writeText(jsonString);
+      setCopySuccess('Copied to clipboard!');
+      setTimeout(() => setCopySuccess(null), 2000); // Clear success message after 2 seconds
+    } catch (err) {
+      setCopySuccess('Failed to copy!');
+    }
   };
 
   if (!schema) return <p className="text-gray-500">Provide a valid JSON schema to preview the form.</p>;
@@ -87,12 +114,8 @@ const FormPreview: React.FC<FormPreviewProps> = ({ schema }) => {
         </div>
       ))}
 
-      {/* Loading and Success States */}
-      {isSubmitting ? (
-        <p className="text-blue-500">Submitting...</p>
-      ) : successMessage ? (
-        <p className="text-green-500">{successMessage}</p>
-      ) : (
+      {/* Submit Button */}
+      {!isSubmitting && !successMessage && (
         <button
           type="submit"
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
@@ -100,6 +123,36 @@ const FormPreview: React.FC<FormPreviewProps> = ({ schema }) => {
           Submit
         </button>
       )}
+
+      {/* Loading and Success States */}
+      {isSubmitting && <p className="text-blue-500">Submitting...</p>}
+      {successMessage && (
+        <p className="text-green-500">{successMessage}</p>
+      )}
+
+      {/* Download and Copy Buttons */}
+      <div className="flex space-x-4 mt-4">
+        <button
+          type="button"
+          onClick={downloadJSON}
+          className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+          disabled={!Object.keys(formData).length} // Disable if no data available
+        >
+          Download JSON
+        </button>
+
+        <button
+          type="button"
+          onClick={copyJSON}
+          className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
+          disabled={!Object.keys(formData).length} // Disable if no data available
+        >
+          Copy JSON
+        </button>
+      </div>
+
+      {/* Copy Status Message */}
+      {copySuccess && <p className="text-green-500 mt-2">{copySuccess}</p>}
     </form>
   );
 };

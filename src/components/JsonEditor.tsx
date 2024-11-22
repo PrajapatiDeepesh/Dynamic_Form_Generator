@@ -30,8 +30,13 @@ const JsonEditor: React.FC<JsonEditorProps> = ({ onSchemaChange }) => {
         placeholder="Enter JSON schema here..."
       ></textarea>
     </div>
+    
   );
 };
+<div className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 rounded-md">
+  <p className="text-gray-800 dark:text-gray-100">This is a component.</p>
+</div>
+
 
 export default JsonEditor;
 
